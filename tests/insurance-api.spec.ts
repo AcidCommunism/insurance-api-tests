@@ -71,6 +71,7 @@ test.describe('order placement tests', () => {
                 const getOrderResponse = await request.get(
                     `./traveling_abroad_certificate/${certificateId}`
                 );
+                expect(getOrderResponse.ok()).toBeTruthy();
                 return getOrderResponse.json();
             });
 
