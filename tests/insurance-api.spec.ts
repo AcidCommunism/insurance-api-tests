@@ -32,21 +32,21 @@ test.describe('order placement tests', () => {
                 expect(productListResponse.ok()).toBeTruthy();
                 return productListResponse.json();
             });
-        test.step(`Check that product list contains item with id ${testProductId}`, async () =>
+        await test.step(`Check that product list contains item with id ${testProductId}`, async () =>
             expect(
                 productList.data.map(i => i.id).includes(testProductId)
             ).toBe(true));
 
         // Get product info
         const productInfo =
-            await test.step(`Get product info (id: ${testProductId}`, async () => {
+            await test.step(`Get product info (id: ${testProductId})`, async () => {
                 const productInfoResponse = await request.get(
                     `./traveling_abroad/${testProductId}`
                 );
                 expect(productInfoResponse.ok()).toBeTruthy();
                 return productInfoResponse.json();
             });
-        test.step(`Check that correct product is returned (id: ${testProductId})`, async () =>
+        await test.step(`Check that correct product is returned (id: ${testProductId})`, async () =>
             expect(productInfo.data.id).toBe(testProductId));
 
         // Place new order
@@ -67,7 +67,7 @@ test.describe('order placement tests', () => {
 
         // Get order data
         const orderData =
-            await test.step(`Get order with id: ${certificateId}`, async () => {
+            await test.step(`Get order data with id: ${certificateId}`, async () => {
                 const getOrderResponse = await request.get(
                     `./traveling_abroad_certificate/${certificateId}`
                 );
@@ -107,7 +107,7 @@ test.describe('order placement tests', () => {
         };
 
         const updatedOrder =
-            await test.step(`Update order with id ${certificateId}`, async () => {
+            await test.step(`Update order with id: ${certificateId}`, async () => {
                 const updateOrderResponse = await request.patch(
                     `./traveling_abroad_certificate/${certificateId}`,
                     {
@@ -118,7 +118,7 @@ test.describe('order placement tests', () => {
                 return updateOrderResponse.json();
             });
 
-        test.step('Check that order data has been properly updated', async () => {
+        await test.step('Check that order data has been properly updated', async () => {
             Object.keys(patchOrderData).forEach(k => {
                 if (k !== 'country') {
                     expect(updatedOrder.data[k]).toBe(patchOrderData[k]);
@@ -131,7 +131,7 @@ test.describe('order placement tests', () => {
         });
 
         // Delete order
-        test.step(`Delete order with id ${certificateId}`, async () => {
+        await test.step(`Delete order with id ${certificateId}`, async () => {
             const deleteOrderResponse = await request.delete(
                 `./traveling_abroad_certificate/${certificateId}`
             );
@@ -139,7 +139,7 @@ test.describe('order placement tests', () => {
         });
 
         // Get order returns 404
-        test.step(`Should return 404 on GET /traveling_abroad_certificate/${certificateId}`, async () => {
+        await test.step(`Should return 404 on GET /traveling_abroad_certificate/${certificateId}`, async () => {
             const getDeletedOrderResponse = await request.get(
                 `./traveling_abroad_certificate/${certificateId}`
             );
