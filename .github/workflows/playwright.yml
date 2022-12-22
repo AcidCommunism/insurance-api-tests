@@ -31,7 +31,7 @@ jobs:
             - name: Install Playwright Browsers
               run: npx playwright install --with-deps
             - name: Run Playwright tests
-              run: PRODUCTION= AUTH_USERNAME= AUTH_PASSWORD= npx playwright test
+              run: PRODUCTION=$production AUTH_USERNAME=$auth_username AUTH_PASSWORD=$auth_password npx playwright test
             - uses: actions/upload-artifact@v3
               if: always()
               with:
