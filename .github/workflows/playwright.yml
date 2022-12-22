@@ -10,13 +10,6 @@ on:
                 options:
                     - '1'
                     - '0'
-            auth_username:
-                description: 'API user'
-                required: true
-                default: 'alchuev@gmail.com'
-            auth_password:
-                description: 'API user password'
-                required: true
 jobs:
     test:
         timeout-minutes: 60
@@ -31,7 +24,7 @@ jobs:
             - name: Install Playwright Browsers
               run: npx playwright install --with-deps
             - name: Run Playwright tests
-              run: PRODUCTION=${{ github.event.inputs.production }} AUTH_USERNAME=${{ github.event.inputs.auth_username }} AUTH_PASSWORD=${{ github.event.inputs.auth_password }} npx playwright test
+              run: PRODUCTION=${{ github.event.inputs.production }} AUTH_USERNAME=${{ secrets.AUTH_USERNAME }} AUTH_PASSWORD=${{ secrets.AUTH_PASSWORD }} npx playwright test
             - uses: actions/upload-artifact@v3
               if: always()
               with:
