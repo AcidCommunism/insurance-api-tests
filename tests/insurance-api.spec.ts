@@ -29,7 +29,10 @@ test.describe('order placement tests', () => {
                 const productListResponse = await request.get(
                     `./traveling_abroad`
                 );
-                expect(productListResponse.ok()).toBeTruthy();
+                expect(
+                    productListResponse.ok(),
+                    `Response code is ${productListResponse.status()}, expected to be 200-299`
+                ).toBeTruthy();
                 return productListResponse.json();
             });
         await test.step(`Check that product list contains item with id ${testProductId}`, async () =>
@@ -43,7 +46,10 @@ test.describe('order placement tests', () => {
                 const productInfoResponse = await request.get(
                     `./traveling_abroad/${testProductId}`
                 );
-                expect(productInfoResponse.ok()).toBeTruthy();
+                expect(
+                    productInfoResponse.ok(),
+                    `Response code is ${productInfoResponse.status()}, expected to be 200-299`
+                ).toBeTruthy();
                 return productInfoResponse.json();
             });
         await test.step(`Check that correct product is returned (id: ${testProductId})`, async () =>
@@ -60,7 +66,10 @@ test.describe('order placement tests', () => {
                     },
                 }
             );
-            expect(placeOrderResponse.ok()).toBeTruthy();
+            expect(
+                placeOrderResponse.ok(),
+                `Response code is ${placeOrderResponse.status()}, expected to be 200-299`
+            ).toBeTruthy();
             return placeOrderResponse.json();
         });
         const certificateId = newOrderData.data.id || newOrderData.data[0].id;
@@ -71,7 +80,10 @@ test.describe('order placement tests', () => {
                 const getOrderResponse = await request.get(
                     `./traveling_abroad_certificate/${certificateId}`
                 );
-                expect(getOrderResponse.ok()).toBeTruthy();
+                expect(
+                    getOrderResponse.ok(),
+                    `Response code is ${getOrderResponse.status()}, expected to be 200-299`
+                ).toBeTruthy();
                 return getOrderResponse.json();
             });
 
@@ -115,7 +127,10 @@ test.describe('order placement tests', () => {
                         data: patchOrderData,
                     }
                 );
-                expect(updateOrderResponse.ok()).toBeTruthy();
+                expect(
+                    updateOrderResponse.ok(),
+                    `Response code is ${updateOrderResponse.status()}, expected to be 200-299`
+                ).toBeTruthy();
                 return updateOrderResponse.json();
             });
 
@@ -136,7 +151,10 @@ test.describe('order placement tests', () => {
             const deleteOrderResponse = await request.delete(
                 `./traveling_abroad_certificate/${certificateId}`
             );
-            expect(deleteOrderResponse.ok()).toBeTruthy();
+            expect(
+                deleteOrderResponse.ok(),
+                `Response code is ${deleteOrderResponse.status()}, expected to be 200-299`
+            ).toBeTruthy();
         });
 
         // Get order returns 404
