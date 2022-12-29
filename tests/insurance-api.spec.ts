@@ -1,4 +1,5 @@
-import {test, expect} from '@playwright/test';
+import { test, expect, request } from '@playwright/test';
+import { v4 as uuid } from 'uuid';
 
 const httpCredentials = {
     username: process.env.AUTH_USERNAME || 'alchuev@gmail.com',
@@ -18,10 +19,12 @@ test.describe('order placement tests', () => {
                 : 'http://insurance-backend-stg.i.bestdoctor.dev/api/',
         extraHTTPHeaders: {
             Authorization: `Basic ${credentialsBase64}`,
+            Accept: 'application/json',
+            'Request-Id': uuid(),
         },
     });
 
-    test('should create new order @positive', async ({request}) => {
+    test('should create new order @positive', async ({ request }) => {
         // Get product list
         const productList =
             await test.step('Get list of products', async () => {
@@ -35,7 +38,9 @@ test.describe('order placement tests', () => {
                 return productListResponse.json();
             });
         await test.step(`Check that product list contains item with id ${testProductId}`, async () =>
-            expect(productList.data.map(i => i.id).includes(testProductId)).toBe(true));
+            expect(
+                productList.data.map(i => i.id).includes(testProductId)
+            ).toBe(true));
 
         // Get product info
         const productInfo =
@@ -54,28 +59,32 @@ test.describe('order placement tests', () => {
 
         // Place new order
         const newOrderData = await test.step('Create new order', async () => {
-            const placeOrderResponse = await request.post('./traveling_abroad_certificate', {
-                data: {
-                    is_available: true,
-                    traveling_abroad: testProductId,
-                },
-            });
+            const placeOrderResponse = await request.post(
+                './traveling_abroad_certificate',
+                {
+                    data: {
+                        is_available: true,
+                        traveling_abroad: testProductId,
+                    },
+                }
+            );
             expect(
-                placeOrderResponse.ok(),
-                `Response code is ${placeOrderResponse.status()}, expected to be 200-299`
-            ).toBeTruthy();
+                placeOrderResponse.status(),
+                `Response code is ${placeOrderResponse.status()}, expected to be 201`
+            ).toBe(201);
             return placeOrderResponse.json();
         });
-        const certificateId = newOrderData.data.id || newOrderData.data[0].id;
+        const certificateId = newOrderData.data.id;
 
         // Get order data
-        const orderData = await test.step(`Get order data with id: ${certificateId}`, async () => {
-            const getOrderResponse = await request.get(
-                `./traveling_abroad_certificate/${certificateId}`
-            );
-            expect(getOrderResponse.ok()).toBeTruthy();
-            return getOrderResponse.json();
-        });
+        const orderData =
+            await test.step(`Get order data with id: ${certificateId}`, async () => {
+                const getOrderResponse = await request.get(
+                    `./traveling_abroad_certificate/${certificateId}`
+                );
+                expect(getOrderResponse.ok()).toBeTruthy();
+                return getOrderResponse.json();
+            });
 
         // Update countries
         const available_countries = orderData.data.available_countries;
@@ -87,21 +96,27 @@ test.describe('order placement tests', () => {
                         data: {
                             country: available_countries
                                 .filter(i =>
-                                    ['Japan', 'Australia', 'Mozambique', 'Angola'].includes(i.name)
+                                    [
+                                        'Japan',
+                                        'Australia',
+                                        'Mozambique',
+                                        'Angola',
+                                    ].includes(i.name)
                                 )
                                 .map(i => i.id),
                         },
                     }
                 );
                 expect(
-                    getOrderResponse.ok(),
-                    `Response code is ${getOrderResponse.status()}, expected to be 200-299`
+                    updateOrderResponse.ok(),
+                    `Response code is ${updateOrderResponse.status()}, expected to be 200-299`
                 ).toBeTruthy();
-                return getOrderResponse.json();
+                return updateOrderResponse.json();
             });
 
         // Update currency
-        const available_currencies = updatedCountryOrder.data.available_currencies;
+        const available_currencies =
+            updatedCountryOrder.data.available_currencies;
         const updatedCurrencyOrder =
             await test.step(`Update currency for order with id: ${certificateId}`, async () => {
                 const updateOrderResponse = await request.patch(
@@ -190,7 +205,9 @@ test.describe('order placement tests', () => {
                 if (k !== 'country') {
                     expect(updatedOrder.data[k]).toBe(patchOrderData[k]);
                 } else {
-                    expect(updatedOrder.data[k].map(i => i.id)).toStrictEqual(patchOrderData[k]);
+                    expect(updatedOrder.data[k].map(i => i.id)).toStrictEqual(
+                        patchOrderData[k]
+                    );
                 }
             });
         });
