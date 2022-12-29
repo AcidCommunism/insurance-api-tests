@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import {test, expect} from '@playwright/test';
 
 const httpCredentials = {
-    username: process.env.AUTH_USERNAME || 'some@default.user',
-    password: process.env.AUTH_PASSWORD || 'D3FAU1TP@$sw0rD',
+    username: process.env.AUTH_USERNAME || 'alchuev@gmail.com',
+    password: process.env.AUTH_PASSWORD || 'JByYfaFv69gsP3m',
 };
 const credentialsBase64 = Buffer.from(
     `${httpCredentials.username}:${httpCredentials.password}`
@@ -17,62 +17,117 @@ test.describe('order placement tests', () => {
                 ? 'https://b2b.bestinsure.tech/api/'
                 : 'http://insurance-backend-stg.i.bestdoctor.dev/api/',
         extraHTTPHeaders: {
-            Accept: 'application/json',
             Authorization: `Basic ${credentialsBase64}`,
         },
     });
 
-    test('should create new order @positive', async ({ request }) => {
+    test('should create new order @positive', async ({request}) => {
         // Get product list
-        const productList =
-            await test.step('Get list of products', async () => {
-                const productListResponse = await request.get(
-                    `./traveling_abroad`
-                );
-                expect(productListResponse.ok()).toBeTruthy();
-                return productListResponse.json();
-            });
+        const productList = await test.step('Get list of products', async () => {
+            const productListResponse = await request.get(`./traveling_abroad`);
+            expect(productListResponse.ok()).toBeTruthy();
+            return productListResponse.json();
+        });
         await test.step(`Check that product list contains item with id ${testProductId}`, async () =>
-            expect(
-                productList.data.map(i => i.id).includes(testProductId)
-            ).toBe(true));
+            expect(productList.data.map(i => i.id).includes(testProductId)).toBe(true));
 
         // Get product info
-        const productInfo =
-            await test.step(`Get product info (id: ${testProductId})`, async () => {
-                const productInfoResponse = await request.get(
-                    `./traveling_abroad/${testProductId}`
-                );
-                expect(productInfoResponse.ok()).toBeTruthy();
-                return productInfoResponse.json();
-            });
+        const productInfo = await test.step(`Get product info (id: ${testProductId})`, async () => {
+            const productInfoResponse = await request.get(`./traveling_abroad/${testProductId}`);
+            expect(productInfoResponse.ok()).toBeTruthy();
+            return productInfoResponse.json();
+        });
         await test.step(`Check that correct product is returned (id: ${testProductId})`, async () =>
             expect(productInfo.data.id).toBe(testProductId));
 
         // Place new order
         const newOrderData = await test.step('Create new order', async () => {
-            const placeOrderResponse = await request.post(
-                './traveling_abroad_certificate',
-                {
-                    data: {
-                        is_available: true,
-                        traveling_abroad: testProductId,
-                    },
-                }
-            );
+            const placeOrderResponse = await request.post('./traveling_abroad_certificate', {
+                data: {
+                    is_available: true,
+                    traveling_abroad: testProductId,
+                },
+            });
             expect(placeOrderResponse.ok()).toBeTruthy();
             return placeOrderResponse.json();
         });
         const certificateId = newOrderData.data.id || newOrderData.data[0].id;
 
         // Get order data
-        const orderData =
-            await test.step(`Get order data with id: ${certificateId}`, async () => {
-                const getOrderResponse = await request.get(
-                    `./traveling_abroad_certificate/${certificateId}`
+        const orderData = await test.step(`Get order data with id: ${certificateId}`, async () => {
+            const getOrderResponse = await request.get(
+                `./traveling_abroad_certificate/${certificateId}`
+            );
+            expect(getOrderResponse.ok()).toBeTruthy();
+            return getOrderResponse.json();
+        });
+
+        // Update countries
+        const available_countries = orderData.data.available_countries;
+        const updatedCountryOrder =
+            await test.step(`Update countries for order with id: ${certificateId}`, async () => {
+                const updateOrderResponse = await request.patch(
+                    `./traveling_abroad_certificate/${certificateId}`,
+                    {
+                        data: {
+                            country: available_countries
+                                .filter(i =>
+                                    ['Japan', 'Australia', 'Mozambique', 'Angola'].includes(i.name)
+                                )
+                                .map(i => i.id),
+                        },
+                    }
                 );
-                expect(getOrderResponse.ok()).toBeTruthy();
-                return getOrderResponse.json();
+                expect(updateOrderResponse.ok()).toBeTruthy();
+                return updateOrderResponse.json();
+            });
+
+        // Update currency
+        const available_currencies = updatedCountryOrder.data.available_currencies;
+        const updatedCurrencyOrder =
+            await test.step(`Update currency for order with id: ${certificateId}`, async () => {
+                const updateOrderResponse = await request.patch(
+                    `./traveling_abroad_certificate/${certificateId}`,
+                    {
+                        data: {
+                            currency_type: available_currencies[0],
+                        },
+                    }
+                );
+                expect(updateOrderResponse.ok()).toBeTruthy();
+                return updateOrderResponse.json();
+            });
+
+        // Update tariff
+        const available_tariffs = updatedCurrencyOrder.data.tariff_available;
+        const updatedTariffOrder =
+            await test.step(`Update tariff for order with id: ${certificateId}`, async () => {
+                const updateOrderResponse = await request.patch(
+                    `./traveling_abroad_certificate/${certificateId}`,
+                    {
+                        data: {
+                            one_time_tariff: available_tariffs[0].id,
+                        },
+                    }
+                );
+                expect(updateOrderResponse.ok()).toBeTruthy();
+                return updateOrderResponse.json();
+            });
+
+        // Update amount
+        const available_amounts = updatedTariffOrder.data.amount_available;
+        const updatedAmountOrder =
+            await test.step(`Update amount for order with id: ${certificateId}`, async () => {
+                const updateOrderResponse = await request.patch(
+                    `./traveling_abroad_certificate/${certificateId}`,
+                    {
+                        data: {
+                            amount_one_time_tariff: available_amounts[0].id,
+                        },
+                    }
+                );
+                expect(updateOrderResponse.ok()).toBeTruthy();
+                return updateOrderResponse.json();
             });
 
         // Update order info
@@ -87,46 +142,33 @@ test.describe('order placement tests', () => {
             today.getMonth(),
             today.getDate() + 30
         ).toLocaleDateString('fr-CA');
-        const available_countries = orderData.data.available_countries;
+
         const patchOrderData = {
-            amount_multiple_tariff: 69,
-            country: available_countries
-                .filter(i =>
-                    ['Japan', 'Australia', 'Mozambique', 'Angola'].includes(
-                        i.name
-                    )
-                )
-                .map(i => i.id),
             date_from: tripStartDate,
             date_to: tripEndDate,
-            days_count: 20,
             insuring_type: 'Физлицо',
-            multiple_tariff: orderData.data.tariff_available[0].id,
             period: 365,
             start_alien: false,
             traveling_type: 'Однократная',
         };
 
-        const updatedOrder =
-            await test.step(`Update order with id: ${certificateId}`, async () => {
-                const updateOrderResponse = await request.patch(
-                    `./traveling_abroad_certificate/${certificateId}`,
-                    {
-                        data: patchOrderData,
-                    }
-                );
-                expect(updateOrderResponse.ok()).toBeTruthy();
-                return updateOrderResponse.json();
-            });
+        const updatedOrder = await test.step(`Update order with id: ${certificateId}`, async () => {
+            const updateOrderResponse = await request.patch(
+                `./traveling_abroad_certificate/${certificateId}`,
+                {
+                    data: patchOrderData,
+                }
+            );
+            expect(updateOrderResponse.ok()).toBeTruthy();
+            return updateOrderResponse.json();
+        });
 
         await test.step('Check that order data has been properly updated', async () => {
             Object.keys(patchOrderData).forEach(k => {
                 if (k !== 'country') {
                     expect(updatedOrder.data[k]).toBe(patchOrderData[k]);
                 } else {
-                    expect(updatedOrder.data[k].map(i => i.id)).toStrictEqual(
-                        patchOrderData[k]
-                    );
+                    expect(updatedOrder.data[k].map(i => i.id)).toStrictEqual(patchOrderData[k]);
                 }
             });
         });
