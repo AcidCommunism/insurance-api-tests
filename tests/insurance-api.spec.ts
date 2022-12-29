@@ -23,20 +23,32 @@ test.describe('order placement tests', () => {
 
     test('should create new order @positive', async ({request}) => {
         // Get product list
-        const productList = await test.step('Get list of products', async () => {
-            const productListResponse = await request.get(`./traveling_abroad`);
-            expect(productListResponse.ok()).toBeTruthy();
-            return productListResponse.json();
-        });
+        const productList =
+            await test.step('Get list of products', async () => {
+                const productListResponse = await request.get(
+                    `./traveling_abroad`
+                );
+                expect(
+                    productListResponse.ok(),
+                    `Response code is ${productListResponse.status()}, expected to be 200-299`
+                ).toBeTruthy();
+                return productListResponse.json();
+            });
         await test.step(`Check that product list contains item with id ${testProductId}`, async () =>
             expect(productList.data.map(i => i.id).includes(testProductId)).toBe(true));
 
         // Get product info
-        const productInfo = await test.step(`Get product info (id: ${testProductId})`, async () => {
-            const productInfoResponse = await request.get(`./traveling_abroad/${testProductId}`);
-            expect(productInfoResponse.ok()).toBeTruthy();
-            return productInfoResponse.json();
-        });
+        const productInfo =
+            await test.step(`Get product info (id: ${testProductId})`, async () => {
+                const productInfoResponse = await request.get(
+                    `./traveling_abroad/${testProductId}`
+                );
+                expect(
+                    productInfoResponse.ok(),
+                    `Response code is ${productInfoResponse.status()}, expected to be 200-299`
+                ).toBeTruthy();
+                return productInfoResponse.json();
+            });
         await test.step(`Check that correct product is returned (id: ${testProductId})`, async () =>
             expect(productInfo.data.id).toBe(testProductId));
 
@@ -48,7 +60,10 @@ test.describe('order placement tests', () => {
                     traveling_abroad: testProductId,
                 },
             });
-            expect(placeOrderResponse.ok()).toBeTruthy();
+            expect(
+                placeOrderResponse.ok(),
+                `Response code is ${placeOrderResponse.status()}, expected to be 200-299`
+            ).toBeTruthy();
             return placeOrderResponse.json();
         });
         const certificateId = newOrderData.data.id || newOrderData.data[0].id;
@@ -78,8 +93,11 @@ test.describe('order placement tests', () => {
                         },
                     }
                 );
-                expect(updateOrderResponse.ok()).toBeTruthy();
-                return updateOrderResponse.json();
+                expect(
+                    getOrderResponse.ok(),
+                    `Response code is ${getOrderResponse.status()}, expected to be 200-299`
+                ).toBeTruthy();
+                return getOrderResponse.json();
             });
 
         // Update currency
@@ -152,16 +170,20 @@ test.describe('order placement tests', () => {
             traveling_type: 'Однократная',
         };
 
-        const updatedOrder = await test.step(`Update order with id: ${certificateId}`, async () => {
-            const updateOrderResponse = await request.patch(
-                `./traveling_abroad_certificate/${certificateId}`,
-                {
-                    data: patchOrderData,
-                }
-            );
-            expect(updateOrderResponse.ok()).toBeTruthy();
-            return updateOrderResponse.json();
-        });
+        const updatedOrder =
+            await test.step(`Update order with id: ${certificateId}`, async () => {
+                const updateOrderResponse = await request.patch(
+                    `./traveling_abroad_certificate/${certificateId}`,
+                    {
+                        data: patchOrderData,
+                    }
+                );
+                expect(
+                    updateOrderResponse.ok(),
+                    `Response code is ${updateOrderResponse.status()}, expected to be 200-299`
+                ).toBeTruthy();
+                return updateOrderResponse.json();
+            });
 
         await test.step('Check that order data has been properly updated', async () => {
             Object.keys(patchOrderData).forEach(k => {
@@ -178,7 +200,10 @@ test.describe('order placement tests', () => {
             const deleteOrderResponse = await request.delete(
                 `./traveling_abroad_certificate/${certificateId}`
             );
-            expect(deleteOrderResponse.ok()).toBeTruthy();
+            expect(
+                deleteOrderResponse.ok(),
+                `Response code is ${deleteOrderResponse.status()}, expected to be 200-299`
+            ).toBeTruthy();
         });
 
         // Get order returns 404
